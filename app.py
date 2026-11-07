@@ -1,7 +1,18 @@
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 import psycopg2
 
+# Initialize your FastAPI app web server engine
 app = FastAPI()
+
+# Allow your local frontend files to securely communicate with your Python backend
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Allows any local file or website to read data
+    allow_credentials=True,
+    allow_methods=["*"],  # Allows all web actions (GET, POST, etc.)
+    allow_headers=["*"],  # Allows all secure communication headers
+)
 
 # 1. Database fetcher utility function
 def get_live_menu():

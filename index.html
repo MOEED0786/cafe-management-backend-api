@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Cafe Checkout System</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 40px; background: #f4f4f9; text-align: center; }
+        .card { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); display: inline-block; max-width: 400px; width: 100%; }
+        button { background: #ff6b6b; color: white; border: none; padding: 12px 24px; font-size: 16px; border-radius: 6px; cursor: pointer; width: 100%; font-weight: bold; }
+        button:hover { background: #ee5253; }
+        .total-box { margin-top: 20px; font-size: 22px; color: #2ecc71; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+    <div class="card">
+        <h2>☕ Cafe Customer App</h2>
+        <p>Items Selected: Espresso, Iced Latte, Club Sandwich</p>
+        <p>Promo Code Applied: <strong>CAFE10</strong></p>
+        
+        <button onclick="fetchLiveBill()">Calculate My Total Bill</button>
+        
+        <div class="total-box" id="display-total">Total: --</div>
+    </div>
+
+    <script>
+        async function fetchLiveBill() {
+            try {
+                // FIXED URL PATH: This now points perfectly to your /checkout route
+                let response = await fetch("http://127.0.0.1:8000/checkout?coupon=CAFE10");
+                let data = await response.json();
+                
+                document.getElementById("display-total").innerText = "Total: $" + data.final_total.toFixed(2);
+            } catch (error) {
+                document.getElementById("display-total").innerText = "Error loading bill";
+            }
+        }
+    </script>
+</body>
+</html>
