@@ -2,39 +2,136 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Cafe Checkout System</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gourmet Cafe System</title>
     <style>
-        body { font-family: Arial, sans-serif; margin: 40px; background: #f4f4f9; text-align: center; }
-        .card { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); display: inline-block; max-width: 400px; width: 100%; }
-        button { background: #ff6b6b; color: white; border: none; padding: 12px 24px; font-size: 16px; border-radius: 6px; cursor: pointer; width: 100%; font-weight: bold; }
-        button:hover { background: #ee5253; }
-        .total-box { margin-top: 20px; font-size: 22px; color: #2ecc71; font-weight: bold; }
-    </style>
+        body { font-family: 'Segoe UI', system-ui, sans-serif; margin: 0; background-color: #f8f9fa; color: #212529; }
+        header { background: #111827; color: white; padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; }
+        .nav-btn { background: #374151; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; margin-left: 5px; font-weight: 500; }
+        .nav-btn:hover { background: #4b5563; }
+        .container { max-width: 1100px; margin: 30px auto; padding: 0 20px; }
+        .page { display: none; }
+        .page.active { display: block; }
+        .grid { display: grid; grid-template-columns: 2fr 1fr; gap: 30px; }
+        .admin-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; }
+        .card { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.02); border: 1px solid #e5e7eb; margin-bottom: 20px; }
+        h2 { margin-top: 0; border-bottom: 2px solid #f3f4f6; padding-bottom: 12px; display: flex; justify-content: space-between; align-items: center; }
+        .food-item, .admin-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #f3f4f6; }
+        .counter { display: flex; align-items: center; gap: 12px; }
+        .btn-circle { width: 32px; height: 32px; border-radius: 50%; border: 1px solid #cbd5e1; background: white; font-size: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+        .btn-circle:hover:not(:disabled) { background: #f8fafc; }
+        .btn-circle:disabled { opacity: 0.3; cursor: not-allowed; }
+        .qty-val { font-weight: 600; width: 30px; text-align: center; }
+        .btn-action { background: #2563eb; color: white; border: none; padding: 12px 20px; border-radius: 8px; width: 100%; font-weight: 600; cursor: pointer; margin-top: 15px; }
+        .btn-action:hover { background: #1d4ed8; }
+        .receipt-item { display: flex; justify-content: space-between; font-size: 0.95rem; margin-bottom: 8px; }
+        .ticket { background: #fffbeb; border: 1px solid #fef3c7; border-left: 5px solid #d97706; padding: 20px; border-radius: 8px; margin-bottom: 15px; color: #1f2937; }
+        .status-badge { background: #fef3c7; color: #92400e; padding: 4px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: bold; float: right; }
+        input[type="number"] { width: 60px; padding: 6px; border: 1px solid #cbd5e1; border-radius: 6px; text-align: center; font-weight: 600; }
+        #reportPeriodSelect option {
+    color: #212529 !important;
+    background-color: #ffffff !important;
+}
+</style>
 </head>
 <body>
 
-    <div class="card">
-        <h2>☕ Cafe Customer App</h2>
-        <p>Items Selected: Espresso, Iced Latte, Club Sandwich</p>
-        <p>Promo Code Applied: <strong>CAFE10</strong></p>
-        
-        <button onclick="fetchLiveBill()">Calculate My Total Bill</button>
-        
-        <div class="total-box" id="display-total">Total: --</div>
+    <header>
+        <h3 style="margin:0;">☕ Cafe Engine v2.5</h3>
+        <div>
+            <button class="nav-btn" onclick="switchPage('customerPage')">🛒 Customer Menu</button>
+            <button class="nav-btn" onclick="switchPage('kitchenPage')" style="background: #047857;">🖥️ Kitchen Screen</button>
+            <button class="nav-btn" onclick="switchPage('adminPage')" style="background: #7c3aed;">👨‍💼 Manager Dashboard</button>
+        </div>
+    </header>
+
+    <div class="container">
+        <!-- 1. CUSTOMER PORTAL -->
+        <div id="customerPage" class="page active">
+            <div class="grid">
+                <div class="card">
+                    <h2>Live Fresh Menu Catalog</h2>
+                    <div id="menuContainer">Loading dynamic kitchen inventory items...</div>
+                </div>
+                <div class="card">
+                    <h2>Current Order Bill</h2>
+                    <div id="receiptContainer">
+                        <p style="color: #6b7280;">Your current tray is completely empty.</p>
+                    </div>
+                    <button class="btn-action" style="background: #10b981;" onclick="placeOrder()">🚀 Submit Order to Kitchen</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 2. KITCHEN MONITOR SYSTEM -->
+        <div id="kitchenPage" class="page">
+            <div class="card" style="background: #111827; color: white;">
+                <h2>🖥️ Live Back-Counter Kitchen Tickets <span id="wsStatus" style="color: #ef4444; font-size: 0.5em; margin-left: 10px;">● Off air</span></h2>
+                <div id="kitchenTickets">
+                    <p style="color: #9ca3af;">No pending items in queue pipeline.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- 3. BACK-PANEL ADMIN INVENTORY & ANALYTICS MANAGER -->
+        <div id="adminPage" class="page">
+            <div class="card" style="background: linear-gradient(135deg, #1e1b4b 0%, #311042 100%); color: white; border: none;">
+                <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 15px; margin-bottom: 15px;">
+                    <h2 style="margin: 0; border: none; color: white;">📊 Executive Sales & Revenue Insights</h2>
+                    <div>
+                        <label style="font-size: 0.85em; margin-right: 8px; color: #cbd5e1;">Reporting Window:</label>
+                        <select id="reportPeriodSelect" onchange="loadSalesReport(this.value)" style="background: rgba(255,255,255,0.1); color: white; border: 1px solid rgba(255,255,255,0.2); padding: 6px 12px; border-radius: 6px; cursor: pointer; font-weight: 600;">
+                            <option value="today" selected>Today</option>
+                            <option value="week">This Week</option>
+                            <option value="month">This Month</option>
+                            <option value="year">This Year</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; text-align: center; margin-bottom: 10px;">
+                    <div style="background: rgba(255,255,255,0.05); padding: 15px; border-radius: 8px;">
+                        <div style="font-size: 0.85em; color: #94a3b8; font-weight: 500;">Gross Revenue</div>
+                        <div id="repTotalRevenue" style="font-size: 1.8em; font-weight: bold; color: #10b981; margin-top: 5px;">Rs. 0</div>
+                    </div>
+                    <div style="background: rgba(255,255,255,0.05); padding: 15px; border-radius: 8px;">
+                        <div style="font-size: 0.85em; color: #94a3b8; font-weight: 500;">Orders Processed</div>
+                        <div id="repTotalOrders" style="font-size: 1.8em; font-weight: bold; color: #38bdf8; margin-top: 5px;">0</div>
+                    </div>
+                    <div style="background: rgba(255,255,255,0.05); padding: 15px; border-radius: 8px;">
+                        <div style="font-size: 0.85em; color: #94a3b8; font-weight: 500;">🔥 Top Performer</div>
+                        <div id="repBestSeller" style="font-size: 1.1em; font-weight: bold; color: #f59e0b; margin-top: 8px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">None</div>
+                    </div>
+                    <div style="background: rgba(255,255,255,0.05); padding: 15px; border-radius: 8px;">
+                        <div style="font-size: 0.85em; color: #94a3b8; font-weight: 500;">❄️ Dead Stock</div>
+                        <div id="repDeadStockCount" style="font-size: 1.8em; font-weight: bold; color: #f87171; margin-top: 5px;">0 Items</div>
+                    </div>
+                </div>
+                <div id="repDeadStockList" style="font-size: 0.82em; color: #cbd5e1; padding: 5px 10px;"></div>
+            </div>
+
+            <div style="margin-bottom: 20px;">
+                <button class="nav-btn" style="background: #059669; padding: 12px 24px;" onclick="generateAutoRestockPreview()">⚡ Auto-Fill List A From Template Defaults</button>
+            </div>
+            
+            <div class="admin-grid">
+                <div class="card">
+                    <h2>📦 Live Workspace Review (List A)</h2>
+                    <p style="font-size:0.85em; color:#6b7280; margin-top:-10px;">Review or fine-tune exact counts before pushing them live to shelves.</p>
+                    <div id="listAWorkspace">Loading workspace matrix data...</div>
+                    <button class="btn-action" style="background: #059669;" onclick="commitWorkspaceToLiveInventory()">💾 Save Changes & Push Live</button>
+                </div>
+
+                <div class="card">
+                    <h2>⚙️ Saved Target Baselines (List B)</h2>
+                    <p style="font-size:0.85em; color:#6b7280; margin-top:-10px;">Set standard target counts for automated restocking presets.</p>
+                    <div id="listBConfig">Loading master template schema updates...</div>
+                </div>
+            </div>
+        </div>
     </div>
 
-    <script>
-        async function fetchLiveBill() {
-            try {
-                // FIXED URL PATH: This now points perfectly to your /checkout route
-                let response = await fetch("http://127.0.0.1:8000/checkout?coupon=CAFE10");
-                let data = await response.json();
-                
-                document.getElementById("display-total").innerText = "Total: $" + data.final_total.toFixed(2);
-            } catch (error) {
-                document.getElementById("display-total").innerText = "Error loading bill";
-            }
-        }
-    </script>
+    <!-- LINKING SEPARATED LOGIC SCRIPT OUT HERE -->
+    <script src="/index.js?v=999"></script>
 </body>
 </html>
